@@ -91,10 +91,9 @@ function testConfigDefault_() {
 
 function testConfigNothing_() {
   let MyLogger = newLog("My.New.Fancy.Log.Subclass");
-  MyLogger.configure({
+  Test.willFail(()=>{MyLogger.configure({
     "My.New.Fancy.Nope" : {"level" : "ERROR"}
-  });
-  Test.isEqual(MyLogger.LEVEL, 1);
+  })}, "Couldn't find any configuration available for My.New.Fancy.Log.Subclass.");
 }
 
 function testPerformance() {
