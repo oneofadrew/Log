@@ -4,7 +4,7 @@ const DEBUG = LEVELS.indexOf("DEBUG");
 const INFO = LEVELS.indexOf("INFO");
 const WARN = LEVELS.indexOf("WARN");
 const ERROR = LEVELS.indexOf("ERROR");
-const LEVELS_STRING = ["[TRACE]","[DEBUG]","[INFO] ","[WARN] ","[ERROR]"];
+const LEVEL_STRINGS = LEVELS.map(level => `[${level}]`.padEnd(7));
 
 class Log {
   constructor(namespace="", level=2){
@@ -40,7 +40,7 @@ class Log {
     let dString = [{year: 'numeric'}, {month: '2-digit'}, {day: '2-digit'}].map(option => new Intl.DateTimeFormat('en', option).format(d)).join("-");
     let tString = new Intl.DateTimeFormat('en', {hour: "numeric", minute: "numeric", second: "numeric", hour12: false}).format(d);
     let mString = d.getMilliseconds().toString().padStart(3, '0');
-    let message = `${dString} ${tString}.${mString} - ${LEVELS[level]}::[${this.NAMESPACE}]::${msg}`;
+    let message = `${dString} ${tString}.${mString} ${LEVEL_STRINGS[level]} [${this.NAMESPACE}]::${msg}`;
     Logger.log(message, ...substitutes);
   }
 }

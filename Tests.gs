@@ -1,3 +1,7 @@
+/* -----------------------------------------------------------------------------------
+  Functional tests
+ ----------------------------------------------------------------------------------- */
+
 function runTests() {
   let suite = Test.newTestSuite("All Tests")
     .addSuite(getLogLevelSuite_())
@@ -96,26 +100,30 @@ function testConfigNothing_() {
   })}, "Couldn't find any configuration available for My.New.Fancy.Log.Subclass.");
 }
 
+/* -----------------------------------------------------------------------------------
+  Performance tests
+ ----------------------------------------------------------------------------------- */
+
 function testPerformance() {
   const loop = 10000;
   const TestLogger = newLog("Test");
 
   uDate = new Date();
   for (let i=1;i<=loop;i++) {
-    TestLogger.debug("I have written with debug %s times", i);
+    TestLogger.info("I have written with info %s times", i);
     TestLogger.trace("I have not written with trace %s times", i);
   }
   euDate = new Date();
 
   tDate = new Date();
   for (let i=1;i<=loop;i++) {
-    TestLogger.debug("I have written with debug %s times", i);
+    TestLogger.info("I have written with info %s times", i);
   }
   etDate = new Date();
 
   let sDate = new Date();
   for (let i=1;i<=loop;i++) {
-    Logger.log("2024-03-17 24:16:53.381 - DEBUG::[Test]::I have written with string %s times", i);
+    Logger.log("2024-03-17 24:16:53.381 [INFO]  [Test]::I have written with string %s times", i);
   }
   esDate = new Date();
 
@@ -129,15 +137,15 @@ function testPerformance() {
   Logger.log("String: %s times in %s ms", loop, sTime);
 
   let tTime = (etDate.getTime() - tDate.getTime());
-  Logger.log("Debug: %s times in %s ms", loop, tTime);
+  Logger.log("Info: %s times in %s ms", loop, tTime);
 
   let uTime = (euDate.getTime() - uDate.getTime());
-  Logger.log("Debug Not Trace: %s times in %s ms", loop, uTime);
+  Logger.log("Info Not Trace: %s times in %s ms", loop, uTime);
 
   let rTime = (erDate.getTime() - rDate.getTime());
   Logger.log("Not Trace: %s times in %s ms", loop, rTime);
 
   Test.isLessThanOrEqualTo(rTime, 100, "Not Trace");
-  Test.isLessThan(tTime, (sTime*2.2), "Debug");
-  Test.isLessThan(uTime, (sTime*2.2), "Debug Not Trace");
+  Test.isLessThan(tTime, (sTime*2.2), "Info");
+  Test.isLessThan(uTime, (sTime*2.2), "Info Not Trace");
 }
