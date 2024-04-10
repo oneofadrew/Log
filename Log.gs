@@ -1,3 +1,12 @@
+//---------------------------------------------------------------------------------------
+// Log - a library to support log levels in Logging for debugging purposes
+// Copyright ⓒ 2024 Drew Harding
+// All rights reserved.
+//
+// Script ID: 13RAf81luI1DJwKXIeWvK2daYsTN2Rnl2IE1oY_j156tEnNaVaXdRlg9O
+// GitHub Repo: https://github.com/oneofadrew/Log
+//---------------------------------------------------------------------------------------
+
 const LEVELS = ["TRACE","DEBUG","INFO","WARN","ERROR"];
 const TRACE = LEVELS.indexOf("TRACE");
 const DEBUG = LEVELS.indexOf("DEBUG");
@@ -50,10 +59,21 @@ function getLevel_(level) {
   showUsage();
   throw new Error(`Log level '${level}' is not recognised.`);
 }
+
+/**
+ * Create a new Log object for the provided namespace
+ * @param {string} namespace - the namespace for the logger being created. This will be printed in each log message for traceability.
+ * @param {string} level - The optional level of logging for the Logger. If provided it must be a valid log level. See showUsage()
+ * @return {Log} A new Log object with the namespace and optional level provided.
+ */
 function newLog(namespace, level) {
   level = level ? getLevel_(level) : level;
   return new Log(namespace, level);
 }
+
+/**
+ * Prints the usage information to the console.
+ */
 function showUsage() {
   Logger.log("Loggers can be configured through a simple object that provides");
   Logger.log("logging definition against a namespace or part of a namespace. For");
@@ -72,5 +92,10 @@ function showUsage() {
   Logger.log("  'My.Namespace' : {'level' : 'ERROR'}");
   Logger.log("  'My' : {'level' : 'DEBUG'}");
   Logger.log("}");
-
+  Logger.log("With the above configuration the following levels would be set:");
+  Logger.log(" * 'Some.Other.Namespace' logger would have 'INFO' level logging set.");
+  Logger.log(" * 'My.Namespace' logger would have 'ERROR' level logging set.");
+  Logger.log(" * 'My.Other.Namespace' logger would have 'DEBUG' level logging set.");
+  Logger.log(" * 'My.Namespace.Value' logger would have 'ERROR' level logging set.");
+  Logger.log(`Valid log levels are ${LEVELS}`);
 }
