@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------------------
-// Log - a library to support loggging with log levels and custom loggers
 // Copyright ⓒ 2024 Drew Harding
 // All rights reserved.
-//
+//---------------------------------------------------------------------------------------
+// Log - a library to support loggging with log levels and custom loggers
 // Script ID: 13RAf81luI1DJwKXIeWvK2daYsTN2Rnl2IE1oY_j156tEnNaVaXdRlg9O
 // GitHub Repo: https://github.com/oneofadrew/Log
 //---------------------------------------------------------------------------------------
@@ -100,9 +100,18 @@ function lowerise_(oldObj, newObj={}) {
 }
 
 /**
- * Create a new Log object for the provided namespace
- * @param {string} namespace - the namespace for the logger being created. This will be printed in each log message for traceability
- * @return {Log} A new Log object with the namespace and optional level provided.
+ * Create a new log object for the provided namespace. The log object will send messages to the configured logger if the configured
+ * level of the log object's namespace is equal to or higher than the level of the log function called. For example if MyLog's
+ * namespace is configured to a level of INFO:
+ *  - MyLog.trace("My message with args %s and %s", arg1, arg2); //would not log the message
+ *  - MyLog.debug("My message with args %s and %s", arg1, arg2); //would not log the message
+ *  - MyLog.info("My message with args %s and %s", arg1, arg2);  //would log the message
+ *  - MyLog.warn("My message with args %s and %s", arg1, arg2);  //would log the message
+ *  - MyLog.error("My message with args %s and %s", arg1, arg2); //would log the message
+ * The log object has been created to be very efficient if messages should not be logged based on the log level configured for the
+ * namespace. Calls to functions that will not log based on the configured level can be considered to take zero milliseconds in execution.
+ * @param {string} namespace - the namespace for the log object being created. This will be printed in each log message for traceability
+ * @return {Log} A new log object with the namespace provided.
  */
 function newLog(namespace="") {
   const newLogger = new Log(namespace);
@@ -111,14 +120,55 @@ function newLog(namespace="") {
 }
 
 /**
- * Create a new Log object for the provided namespace
- * @param {object} c - the configuration to use for loggers
+ * A convenience function to create a new custom logger for logging messages. It can be used via configuration to send log messages to
+ * alternate end points. The returned logger object has the structure:
+ * {
+ *   "type" : "name of logger type",
+ *   "log" : (message, ...args) => {
+ *             // custom logging logic
+ *           }
+ * }
+ * @param {function} logFunction - a function wth the signature log(message, ...args) used to log messages from the Log object
+ * @param {string} type - [optional] a human readable description of the logger being created. If not provided "custom" will be used
+ * @return {object} A new logger object with the provided type and log function
+ */
+function newLoggerType(logFunction, type) {
+  if (!logFunction) throw new Error("the log(message, ...args) function needs to be provided");
+  const newLoggerType = {
+    "log" : logFunction
+  };
+  if (type) newLoggerType["type"] = type;
+  return newLoggerType;
+}
+
+/**
+ * Sets the configuration to use for log objects. The configuration will be appled to existing log ojects as well as any log objects
+ * created after the configuration has been provided. To see the configuration currently in use and the way it has been applied to
+ * the existing log objects, the Log.dumpConfig() library function can be used. A configuration object has the structure:
+ * {
+ *    "my.log.namespace" : {
+ *      "level" : "TRACE|DEBUG|INFO|WARN|ERROR",
+ *      "logger" : Logger
+ *    }
+ * }
+ * Namespaces are case-insensitive, and can be partially qualified. Namespaces that are more qualified for a specific namespace will
+ * override any provided settings from less qualified namespace settings. A namespace of "default" can be provided that will match every
+ * namespace at the lowest possible level. A logger must be an object that conforms to the logger structure. It can be created with the
+ * helper Log.newLoggerType(logFunction, type) libary function. When applying a configuration against log objects, if no matching level
+ * can be found INFO will be used. If no matching logger can be found the Google Logger object will be used. The Log.showUsage() library
+ * function will provide more details on usage and configuration options with worked examples.
+ * @param {object} c - the configuration to use for log objects based on namespace
  */
 function setConfig(c={}) {
   config = lowerise_(c);
   loggers.forEach(log => configure_(log));
 }
 
+/**
+ * Dumps the current settings in use by the log objects within the Log library to the logger provided. If no logger is provided the
+ * Google Logger will be used.
+ * @param {object} logger - [optional] a logger object to dump the config to.
+ */
 function dumpConfig(logger=Logger) {
   logger.log(`The logger configuration is ${JSON.stringify(config)}`);
   for (log of loggers) {
@@ -129,41 +179,57 @@ function dumpConfig(logger=Logger) {
 }
 
 /**
- * Prints the usage information to the console.
+ * Prints a usage guide for how to use and configure the Log library using the logger provided. If no logger is provided the Google
+ * Logger will be used.
+ * @param {object} logger - [optional] a logger object to print the usage guide to
  */
-function showUsage() {
-  Logger.log("Loggers can be configured through a simple object that provides logging definition against a namespace or");
-  Logger.log("part of a namespace. For example, if a logger has the namespace `my.namespace.value', configuration can be");
-  Logger.log("provided against any of:");
-  Logger.log(" * my.namespace.value");
-  Logger.log(" * my.namespace");
-  Logger.log(" * my");
-  Logger.log("");
-  Logger.log("Namespaces are always lowercase and will be forced to lowercase if they aren't already. The logger will pick");
-  Logger.log("up the configuration settings that are most qualified by the namespace. A default configuration for all loggers");
-  Logger.log("can be provided against the 'default' namespace. If a valid configuration can't be found following these rules");
-  Logger.log("then the INFO and Google Logger will be used. Configuration is a simple object that looks like the following:");
-  Logger.log("  {");
-  Logger.log("    'default' : {'level' : 'INFO', 'logger': customLogger}");
-  Logger.log("    'my' : {'level' : 'DEBUG', 'logger': console}");
-  Logger.log("    'my.namespace' : {'level' : 'ERROR'}");
-  Logger.log("  }");
-  Logger.log("With the above configuration the following levels would be set:");
-  Logger.log(" * 'some.other.namespace' logger would have 'INFO' level logging set and use the custom logger.");
-  Logger.log(" * 'my.namespace' logger would have 'ERROR' level logging set and use a custom logger.");
-  Logger.log(" * 'my.other.namespace' logger would have 'DEBUG' level logging set and use the console logger.");
-  Logger.log(" * 'my.namespace.value' logger would have 'ERROR' level logging set and use the console logger.");
-  Logger.log("");
-  Logger.log("A custom logger is an object that defines a single function with the signature 'log(msg, ...args)'.");
-  Logger.log("It can also optionally include a 'type' property that contains a string to describe the type of logger in the");
-  Logger.log("`Log.dumpLogger()' function. For example:");
-  Logger.log("  const doubleLogger = {");
-  Logger.log("    'type' : 'Double',");
-  Logger.log("    'log' : (msg, ...args) => {");
-  Logger.log("       Logger.log(msg, ...args);");
-  Logger.log("       Logger.log(msg, ...args);");
-  Logger.log("     }");
-  Logger.log("  }");
-  Logger.log("");
-  Logger.log(`Valid log levels are ${LEVELS}`);
+function showUsage(logger=Logger) {
+  logger.log("Log objects can be used for logging for the provided namespace. The Log object will send messages to the configured ");
+  logger.log("logger type if the configured level of the Log object's namespace is equal to or higher than the log level of the");
+  logger.log("function called. For example if MyLog's namespace is configured to a level of INFO:");
+  logger.log(" * MyLog.trace('My message with args %s and %s', arg1, arg2); //would not log the message");
+  logger.log(" * MyLog.debug('My message with args %s and %s', arg1, arg2); //would not log the message");
+  logger.log(" * MyLog.info('My message with args %s and %s', arg1, arg2);  //would log the message");
+  logger.log(" * MyLog.warn('My message with args %s and %s', arg1, arg2);  //would log the message");
+  logger.log(" * MyLog.error('My message with args %s and %s', arg1, arg2); //would log the message");
+  logger.log("");
+  logger.log("Log objects have been created to be very efficient if log messages should not be logged based on the log level");
+  logger.log("configured for the namespace. Calls to functions that will not log based on the configured level can be considered");
+  logger.log("to take zero milliseconds in execution.");
+  logger.log("");
+  logger.log("Log objects can be configured through a simple configuration that provides logging definition against a namespace or");
+  logger.log("a partial namespace. For example, if a log object has the namespace `my.namespace.value', configuration can be provided");
+  logger.log(" against any of:");
+  logger.log(" * my.namespace.value");
+  logger.log(" * my.namespace");
+  logger.log(" * my");
+  logger.log("");
+  logger.log("Namespaces will be forced to lowercase if they aren't already. The log object will pick up the configuration settings");
+  logger.log("that are most qualified by the namespace. A default configuration for all namespaces can be provided against the");
+  logger.log("'default' namespace. If a valid configuration can't be found following these rules then the INFO and Google Logger will");
+  logger.log("be used. A configuration object has the following structure:");
+  logger.log("  {");
+  logger.log("    'default' : {'level' : 'INFO', 'logger': customLoggerType}");
+  logger.log("    'my' : {'level' : 'DEBUG', 'logger': console}");
+  logger.log("    'my.namespace' : {'level' : 'ERROR'}");
+  logger.log("  }");
+  logger.log("With the above configuration object the following settings would be used:");
+  logger.log(" * 'some.other.namespace' logger would have 'INFO' level logging set and use a custom logger type.");
+  logger.log(" * 'my.namespace' logger would have 'ERROR' level logging set and use a custom logger type.");
+  logger.log(" * 'my.other.namespace' logger would have 'DEBUG' level logging set and use the console logger.");
+  logger.log(" * 'my.namespace.value' logger would have 'ERROR' level logging set and use the console logger.");
+  logger.log("");
+  logger.log("A custom logger type is an object that defines a single function with the signature 'log(msg, ...args)', and can.");
+  logger.log("It can also optionally include a 'type' property that contains a string to describe the type of logger for the");
+  logger.log("'Log.dumpConfig()' function. It can be created with the h'Log.newLoggerType(logFunction, type)' library function.")
+  logger.log("For example:");
+  logger.log("  const doubleLogger = {");
+  logger.log("    'type' : 'Double',");
+  logger.log("    'log' : (msg, ...args) => {");
+  logger.log("       Logger.log(msg, ...args);");
+  logger.log("       Logger.log(msg, ...args);");
+  logger.log("     }");
+  logger.log("  }");
+  logger.log("");
+  logger.log(`Valid log levels are ${LEVELS}`);
 }

@@ -1,4 +1,7 @@
 //---------------------------------------------------------------------------------------
+// Copyright ⓒ 2024 Drew Harding
+// All rights reserved.
+//---------------------------------------------------------------------------------------
 // Unit tests for the Log library. These should be run along with every change to the
 // library to verify nothing has broken.
 //
@@ -8,18 +11,18 @@
 //---------------------------------------------------------------------------------------
 
 let messages = [];
-const savingLogger_ = {
-  "type" : "Saving",
-  "log" : (msg, ...args) => {
+const savingLogger_ = newLoggerType(
+  (msg, ...args) => {
     messages[messages.length] = msg;
     Logger.log(msg, ...args);
-  }
-}
-const noTypeLogger_ = {
-  "log" : (msg, ...args) => {
+  },
+  "Saving"
+);
+const noTypeLogger_ = newLoggerType(
+  (msg, ...args) => {
     Logger.log(msg, ...args);
   }
-}
+);
 
 function setUp_() {
   messages = [];
