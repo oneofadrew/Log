@@ -25,12 +25,18 @@ class Log {
     this.LEVEL = INFO;
     if (config) configure_(this);
   }
+  
+  isTraceEnabled() {return this.LEVEL <= TRACE;}
+  isDebugEnabled() {return this.LEVEL <= DEBUG;}
+  isInfoEnabled() {return this.LEVEL <= INFO;}
+  isWarnEnabled() {return this.LEVEL <= WARN;}
+  isErrorEnabled() {return this.LEVEL <= ERROR;}
 
-  trace(msg, ...substitutes) {if (this.LEVEL <= TRACE) this.log_(TRACE, msg, substitutes);}
-  debug(msg, ...substitutes) {if (this.LEVEL <= DEBUG) this.log_(DEBUG, msg, substitutes);}
-  info(msg, ...substitutes) {if (this.LEVEL <= INFO) this.log_(INFO, msg, substitutes);}
-  warn(msg, ...substitutes) {if (this.LEVEL <= WARN) this.log_(WARN, msg, substitutes);}
-  error(msg, ...substitutes) {if (this.LEVEL <= ERROR) this.log_(ERROR, msg, substitutes);}
+  trace(msg, ...substitutes) {if (this.isTraceEnabled()) this.log_(TRACE, msg, substitutes);}
+  debug(msg, ...substitutes) {if (this.isDebugEnabled()) this.log_(DEBUG, msg, substitutes);}
+  info(msg, ...substitutes) {if (this.isInfoEnabled()) this.log_(INFO, msg, substitutes);}
+  warn(msg, ...substitutes) {if (this.isWarnEnabled()) this.log_(WARN, msg, substitutes);}
+  error(msg, ...substitutes) {if (this.isErrorEnabled()) this.log_(ERROR, msg, substitutes);}
 
   log_(level, msg, substitutes) {
     let d = new Date();

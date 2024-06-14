@@ -30,7 +30,7 @@ function setUp_() {
   config = undefined;
 }
 
-function runTests_() {
+function runTests() {
   let suite = Test.newTestSuite("All Tests")
     .addSuite(getHelperSuite_())
     .addSuite(getConfigureSuite_())
@@ -46,6 +46,11 @@ function runTests_() {
 function getHelperSuite_() {
   let suite = Test.newTestSuite("Helper")
     .addSetUp(setUp_)
+    .addTest(testIsTraceEnabled_)
+    .addTest(testIsDebugEnabled_)
+    .addTest(testIsInfoEnabled_)
+    .addTest(testIsWarnEnabled_)
+    .addTest(testIsErrorEnabled_)
     .addTest(testDefault_)
     .addTest(testGetLevelHappyPath_)
     .addTest(testGetLevelUnhappyPath_)
@@ -53,6 +58,56 @@ function getHelperSuite_() {
     .addTest(testLowerise_)
   ;
   return suite;
+}
+
+function testIsTraceEnabled_() {
+  let MyLog = newLog("");
+  MyLog.LEVEL = TRACE;
+  Test.isTrue(MyLog.isTraceEnabled());
+  Test.isTrue(MyLog.isDebugEnabled());
+  Test.isTrue(MyLog.isInfoEnabled());
+  Test.isTrue(MyLog.isWarnEnabled());
+  Test.isTrue(MyLog.isErrorEnabled());
+}
+
+function testIsDebugEnabled_() {
+  let MyLog = newLog("");
+  MyLog.LEVEL = DEBUG;
+  Test.isFalse(MyLog.isTraceEnabled());
+  Test.isTrue(MyLog.isDebugEnabled());
+  Test.isTrue(MyLog.isInfoEnabled());
+  Test.isTrue(MyLog.isWarnEnabled());
+  Test.isTrue(MyLog.isErrorEnabled());
+}
+
+function testIsInfoEnabled_() {
+  let MyLog = newLog("");
+  MyLog.LEVEL = INFO;
+  Test.isFalse(MyLog.isTraceEnabled());
+  Test.isFalse(MyLog.isDebugEnabled());
+  Test.isTrue(MyLog.isInfoEnabled());
+  Test.isTrue(MyLog.isWarnEnabled());
+  Test.isTrue(MyLog.isErrorEnabled());
+}
+
+function testIsWarnEnabled_() {
+  let MyLog = newLog("");
+  MyLog.LEVEL = WARN;
+  Test.isFalse(MyLog.isTraceEnabled());
+  Test.isFalse(MyLog.isDebugEnabled());
+  Test.isFalse(MyLog.isInfoEnabled());
+  Test.isTrue(MyLog.isWarnEnabled());
+  Test.isTrue(MyLog.isErrorEnabled());
+}
+
+function testIsErrorEnabled_() {
+  let MyLog = newLog("");
+  MyLog.LEVEL = ERROR;
+  Test.isFalse(MyLog.isTraceEnabled());
+  Test.isFalse(MyLog.isDebugEnabled());
+  Test.isFalse(MyLog.isInfoEnabled());
+  Test.isFalse(MyLog.isWarnEnabled());
+  Test.isTrue(MyLog.isErrorEnabled());
 }
 
 function testDefault_() {
